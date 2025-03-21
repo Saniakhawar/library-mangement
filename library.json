@@ -1,0 +1,35 @@
+
+  [
+  {
+    "title": "Mastering Python",
+    "author": "David Miller",
+    "publication_year": 2019,
+    "genre": "Programming",
+    "read_status": false,
+    "added_data": "2025-02-11 11:45:59"
+  },
+  {
+    "title": "Python for Beginners",
+    "author": "Sarah Johnson",
+    "publication_year": 2019,
+    "genre": "Programming",
+    "read_status": false,
+    "added_data": "2025-02-11 11:45:59"
+  },
+  {
+    "title": "The Python Handbook",
+    "author": "Michael Brown",
+    "publication_year": 2019,
+    "genre": "Programming",
+    "read_status": false,
+    "added_data": "2025-02-11 11:45:59"
+  },
+  {
+    "title": "Python in Practice",
+    "author": "Emily Davis",
+    "publication_year": 2019,
+    "genre": "Programming",
+    "read_status": false,
+    "added_data": "2025-02-11 11:45:59"
+  }
+]
