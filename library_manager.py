@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 import time
 import plotly.express as px
+from plotly import graph_objects as go
 from streamlit_lottie import st_lottie
 import requests
 
@@ -81,7 +82,6 @@ def remove_book(index):
         return True
     return False
 
-#search books
 def search_books(search_term, search_by):
     search_term = search_term.lower()
     results = []
@@ -99,30 +99,16 @@ def get_library_stats():
     read_books = sum(1 for book in st.session_state.library if book["read_status"])
     percent_read = (read_books / total_books) * 100 if total_books > 0 else 0
     genres = {}
-    authors = {} 
-    decades = {} 
-   
+    authors = {}
+    decades = {}
 
     for book in st.session_state.library:
-       if book['genre'] in genres:
-           genres[book['genre']] += 1
-    else:
-        genres[book['genre']] = 1
+        genres[book['genre']] = genres.get(book['genre'], 0) + 1
+        authors[book['author']] = authors.get(book['author'], 0) + 1
+        decade = (int(book['publication_year']) // 10) * 10
+        decades[decade] = decades.get(decade, 0) + 1
 
-    if book['author'] in authors:
-        authors[book['author']] += 1
-    else:
-      authors[book['author']] = 1
-
-      decades = (book['publication_year'] // 10)*10
-      if decades in decades:
-          decades[decades] += 1
-
-          genres = dict(sorted(genres.items(),key=lambda x:x[1],reverse=True))
-          authors = dict(sorted(authors.items(),key=lambda x:x[1],reverse=True))
-          decades = dict(sorted(decades.items(),key=lambda x:x[1],reverse=True))
     return {
-
         "total_books": total_books,
         "read_books": read_books,
         "percent_read": percent_read,
@@ -132,79 +118,65 @@ def get_library_stats():
     }
 
 def create_visualizations(stats):
-    if stats['total books']>0:
-        fig_read_status = go.Figure(data=[go.Pie(
-            labels=['Read', 'Unread'],
-             values=[stats['read books'], stats['total books'] - stats['read books']],
-             hole=.4,
-             marker_colors= ['#10B981','#F87171']
-             )])
-
-        fig_read_status.update_layout(
-            title_text="Read Vs Unread Books",
-            showlegend=True,
-            height=400
+    if stats['total_books'] > 0:
+        fig_read_status = px.pie(
+            names=['Read', 'Unread'],
+            values=[stats['read_books'], stats['total_books'] - stats['read_books']],
+            hole=0.4,
+            color_discrete_sequence=['#10B981', '#F87171']
         )
+        fig_read_status.update_layout(title_text="Read vs Unread Books", height=400)
         st.plotly_chart(fig_read_status, use_container_width=True)
+
     if stats['genres']:
         genres_df = pd.DataFrame({"Genre": list(stats['genres'].keys()),
-                                
-                                   "Count": list(stats['genres'].values())})
-        fig_genres = px.bar(genres_df, x="Genre",
-                             y="Count",
-                               color="Count", 
-                               color_continous_scale=px.colors.sequential.Blues
-                               )
+                                  "Count": list(stats['genres'].values())})
+        fig_genres = px.bar(genres_df, x="Genre", y="Count",
+                            color="Count",
+                            color_continuous_scale=px.colors.sequential.Blues)
         fig_genres.update_layout(
-            title_text="Book by publication decade",
-            xaxis_title='Decade',
-            yaxis_title ='Numbers of books',
+            title_text="Books by Genre",
+            xaxis_title='Genre',
+            yaxis_title='Number of Books',
             height=400
         )
-        st.plotly_chart(fig_decades, use_container_width=True)
+        st.plotly_chart(fig_genres, use_container_width=True)
 
     if stats['decades']:
-        decades_df = pd.DataFrame({"Decade": [f"{d}s" for d in stats['decades'].keys()], "Count": list(stats['decades'].values())})
-        fig_decades = px.line(
-            decades_df, 
-            x="Decade", 
-            y="Count", 
-            markers=True, 
-            line_sape='spline')
+        decades_df = pd.DataFrame({"Decade": [f"{d}s" for d in stats['decades'].keys()],
+                                   "Count": list(stats['decades'].values())})
+        fig_decades = px.line(decades_df, x="Decade", y="Count",
+                              markers=True, line_shape='spline')
         fig_decades.update_layout(
-            title_text="Book by publication decade",
+            title_text="Books by Publication Decade",
             xaxis_title='Decade',
-            yaxis_title ='Numbers of books',
+            yaxis_title='Number of Books',
             height=400
-            )
+        )
         st.plotly_chart(fig_decades, use_container_width=True)
 
 load_library()
 
-st.sidebar.markdown("<h1 style='text-align: center;'> Navigation</h1>",unsafe_allow_html=True)
-lottie_book = load_lottieurl("https://assests9.lottiefiles.com/temp/1f20_aKAfIn.json")
+st.sidebar.markdown("<h1 style='text-align: center;'> Navigation</h1>", unsafe_allow_html=True)
+lottie_book = load_lottieurl("https://assets9.lottiefiles.com/temp/1f20_aKAfIn.json")
 if lottie_book:
     with st.sidebar:
-      st.lottie(lottie_book, height=200, key="book-animation")
-
+        st_lottie(lottie_book, height=200, key="book-animation")
 
 nav_options = st.sidebar.radio("Choose an option", ["View Library", "Add Book", "Search Books", "Library Statistics"])
 if nav_options == "View Library":
     st.session_state.current_view = 'library'
 elif nav_options == "Add Book":
-  st.session_state.current_view = 'add_book'
-elif nav_options == "Search Books":   
-   st.session_state.current_view = 'search_books'
+    st.session_state.current_view = 'add_book'
+elif nav_options == "Search Books":
+    st.session_state.current_view = 'search_books'
 elif nav_options == "Library Statistics":
     st.session_state.current_view = 'library_stats'
 
+st.markdown("<h1 class='main_header'>📚 Personal Library Manager </h1>", unsafe_allow_html=True)
 
-st.markdown("<h1 class='main_header'>📚 Personal Library Manager </h1>",unsafe_allow_html=True)
-
-if st.session_state.current_view == "Add Book":
-    st.markdown("<h2 xclass='sub-header'>Add a new book.</h2>",unsafe_allow_html=True)
-
-
+if st.session_state.current_view == "add_book":
+    st.markdown("<h2 class='sub-header'>Add a new book.</h2>", unsafe_allow_html=True)
     with st.form("add_book_form"):
         col1, col2 = st.columns(2)
         with col1:
@@ -220,7 +192,7 @@ if st.session_state.current_view == "Add Book":
             st.success("Book added successfully!")
             st.balloons()
 
-elif st.session_state.current_view == "View Library":
+elif st.session_state.current_view == "library":
     st.subheader("Your Library")
     if not st.session_state.library:
         st.warning("Your library is empty!")
@@ -242,7 +214,7 @@ elif st.session_state.current_view == "View Library":
                         save_library()
                         st.rerun()
 
-elif st.session_state.current_view == "Search Books":
+elif st.session_state.current_view == "search_books":
     st.subheader("Search Books")
     search_by = st.selectbox("Search by", ["Title", "Author", "Genre"])
     search_term = st.text_input("Enter search term")
@@ -257,7 +229,7 @@ elif st.session_state.current_view == "Search Books":
     elif search_term:
         st.warning("No results found.")
 
-elif st.session_state.current_view == "Library Statistics":
+elif st.session_state.current_view == "library_stats":
     st.subheader("Library Statistics")
     if not st.session_state.library:
         st.warning("No books in library. Add some to see statistics.")
