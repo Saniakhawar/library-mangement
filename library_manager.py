@@ -158,12 +158,13 @@ def create_visualizations(stats):
 load_library()
 
 st.sidebar.markdown("<h1 style='text-align: center;'> Navigation</h1>", unsafe_allow_html=True)
+
 lottie_book = load_lottieurl("https://assets9.lottiefiles.com/temp/1f20_aKAfIn.json")
 if lottie_book:
-    with st.sidebar:
-        st_lottie(lottie_book, height=200, key="book-animation")
+    st.sidebar.lottie(lottie_book, height=200, key="book-animation")
 
 nav_options = st.sidebar.radio("Choose an option", ["View Library", "Add Book", "Search Books", "Library Statistics"])
+
 if nav_options == "View Library":
     st.session_state.current_view = 'library'
 elif nav_options == "Add Book":
